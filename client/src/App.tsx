@@ -9,6 +9,7 @@ import AgentsList from "@/pages/AgentsList";
 import AgentDetail from "@/pages/AgentDetail";
 import Settings from "@/pages/Settings";
 import Deployments from "@/pages/Deployments";
+import WhatsAppModule from "@/pages/WhatsApp";
 
 function Router() {
   return (
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/agents/:id" component={AgentDetail} />
       <Route path="/settings" component={Settings} />
       <Route path="/deployments" component={Deployments} />
+      <Route path="/whatsapp" component={WhatsAppModule} />
       <Route component={NotFound} />
     </Switch>
   );
