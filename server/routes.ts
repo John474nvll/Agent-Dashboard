@@ -3,6 +3,12 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+});
 
 export async function registerRoutes(
   httpServer: Server,
@@ -98,6 +104,31 @@ export async function registerRoutes(
       callId: mockCallId, 
       webUrl: `https://retellai.com/widget/${retellAgentId}` 
     });
+  });
+
+  // New endpoint for real agent text interaction using OpenAI
+  app.post("/api/agents/:id/chat", async (req, res) => {
+    const agent = await storage.getAgent(Number(req.params.id));
+    if (!agent) return res.status(404).json({ message: "Agent not found" });
+
+    const { message } = req.body;
+    const config = agent.config as any;
+    const prompt = config.retellLlmData?.general_prompt || "Eres un asistente de voz profesional.";
+
+    try {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: prompt },
+          { role: "user", content: message }
+        ],
+      });
+
+      res.json({ response: response.choices[0].message.content });
+    } catch (error) {
+      console.error("OpenAI Error:", error);
+      res.status(500).json({ message: "Error in AI generation" });
+    }
   });
 
   // Seed Data

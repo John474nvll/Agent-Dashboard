@@ -38,15 +38,27 @@ export default function Playground() {
     }
   };
 
-  const handleSend = () => {
-    // Mock interaction for UI purposes
+  const handleSend = async () => {
     const input = document.getElementById('chat-input') as HTMLInputElement;
-    if (input.value.trim()) {
-      setMessages(prev => [...prev, { role: 'user', text: input.value }]);
-      setTimeout(() => {
-        setMessages(prev => [...prev, { role: 'bot', text: "I'm a simulation response. Connect to Retell AI to enable real voice interaction." }]);
-      }, 1000);
+    const text = input.value.trim();
+    if (text && selectedAgent) {
+      setMessages(prev => [...prev, { role: 'user', text }]);
       input.value = "";
+      
+      try {
+        const res = await apiRequest("POST", `/api/agents/${selectedAgent}/chat`, { message: text });
+        const data = await res.json();
+        setMessages(prev => [...prev, { role: 'bot', text: data.response }]);
+        
+        // Voice synthesis (browser based for simplicity in playground)
+        if ('speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance(data.response);
+          utterance.lang = currentAgent?.language || 'es-ES';
+          window.speechSynthesis.speak(utterance);
+        }
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to get AI response", variant: "destructive" });
+      }
     }
   };
 
@@ -138,6 +150,14 @@ export default function Playground() {
             <h3 className="text-lg font-bold">Voice Simulation</h3>
             <p className="text-sm text-muted-foreground">Status: {isRecording ? "Listening..." : "Idle"}</p>
             
+            <div className="mt-4 p-4 rounded-xl bg-white/5 border border-white/10">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Voice AI (OpenAI)</p>
+              <div className="flex items-center justify-center gap-2">
+                <div className={clsx("w-2 h-2 rounded-full", isRecording ? "bg-red-500 animate-pulse" : "bg-green-500")} />
+                <span className="text-xs">{isRecording ? "Transcribing..." : "Ready to speak"}</span>
+              </div>
+            </div>
+
             {callData?.webUrl && (
               <Button asChild variant="outline" className="mt-4 border-white/10">
                 <a href={callData.webUrl} target="_blank" rel="noopener noreferrer">
