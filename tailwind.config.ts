@@ -76,9 +76,9 @@ export default {
           border: "var(--sidebar-accent-border)"
         },
         status: {
-          online: "rgb(34 197 94)",
-          away: "rgb(245 158 11)",
-          busy: "rgb(239 68 68)",
+          online: "rgb(74 222 128)",
+          away: "rgb(250 204 21)",
+          busy: "rgb(248 113 113)",
           offline: "rgb(156 163 175)",
         },
       },
