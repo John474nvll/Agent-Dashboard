@@ -77,6 +77,20 @@ export const api = {
         404: errorSchemas.notFound,
       },
     },
+    logs: {
+      method: 'GET' as const,
+      path: '/api/agents/:id/logs',
+      responses: {
+        200: z.array(z.custom<any>()), // ActivityLogsResponse
+      },
+    },
+    allLogs: {
+      method: 'GET' as const,
+      path: '/api/activity-logs',
+      responses: {
+        200: z.array(z.custom<any>()),
+      },
+    },
   },
 };
 

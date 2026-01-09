@@ -83,6 +83,13 @@ export async function registerRoutes(
       agentId: retellAgentId,
       isDeployed: "true"
     });
+
+    await storage.createActivityLog({
+      agentId: agent.id,
+      type: "deployment",
+      status: "success",
+      details: `Connected to Retell ID: ${retellAgentId}`
+    });
     
     res.json({ success: true, agentId: retellAgentId });
   });
@@ -100,10 +107,28 @@ export async function registerRoutes(
     
     // Simulate starting a Retell web call with the specific Agent ID
     const mockCallId = `call_${Math.random().toString(36).substr(2, 9)}`;
+
+    await storage.createActivityLog({
+      agentId: agent.id,
+      type: "call",
+      status: "started",
+      details: `Test call started (ID: ${mockCallId})`
+    });
+
     res.json({ 
       callId: mockCallId, 
       webUrl: `https://retellai.com/widget/${retellAgentId}` 
     });
+  });
+
+  app.get(api.agents.logs.path, async (req, res) => {
+    const logs = await storage.getActivityLogs(Number(req.params.id));
+    res.json(logs);
+  });
+
+  app.get(api.agents.allLogs.path, async (req, res) => {
+    const logs = await storage.getAllActivityLogs();
+    res.json(logs);
   });
 
   // New endpoint for real agent text interaction using OpenAI

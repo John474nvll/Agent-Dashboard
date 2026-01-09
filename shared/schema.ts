@@ -16,6 +16,15 @@ export const agents = pgTable("agents", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const activityLogs = pgTable("activity_logs", {
+  id: serial("id").primaryKey(),
+  agentId: serial("agent_id").references(() => agents.id),
+  type: text("type").notNull(), // 'call', 'deployment', 'update'
+  status: text("status").notNull(),
+  details: text("details"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
 // === BASE SCHEMAS ===
 export const insertAgentSchema = createInsertSchema(agents).omit({ 
   id: true, 
@@ -23,9 +32,15 @@ export const insertAgentSchema = createInsertSchema(agents).omit({
   updatedAt: true 
 });
 
+export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
+  id: true,
+  timestamp: true
+});
+
 // === EXPLICIT API CONTRACT TYPES ===
 export type Agent = typeof agents.$inferSelect;
 export type InsertAgent = z.infer<typeof insertAgentSchema>;
+export type ActivityLog = typeof activityLogs.$inferSelect;
 
 export type CreateAgentRequest = InsertAgent;
 export type UpdateAgentRequest = Partial<InsertAgent>;
@@ -33,3 +48,4 @@ export type UpdateAgentRequest = Partial<InsertAgent>;
 // API Response types
 export type AgentResponse = Agent;
 export type AgentsListResponse = Agent[];
+export type ActivityLogsResponse = ActivityLog[];

@@ -1,11 +1,14 @@
 import { db } from "./db";
 import {
   agents,
+  activityLogs,
   type Agent,
   type InsertAgent,
-  type UpdateAgentRequest
+  type UpdateAgentRequest,
+  type ActivityLog,
+  type InsertActivityLog
 } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
   getAgents(): Promise<Agent[]>;
@@ -13,6 +16,10 @@ export interface IStorage {
   createAgent(agent: InsertAgent): Promise<Agent>;
   updateAgent(id: number, updates: UpdateAgentRequest): Promise<Agent>;
   deleteAgent(id: number): Promise<void>;
+  
+  // Activity Logs
+  getActivityLogs(agentId: number): Promise<ActivityLog[]>;
+  createActivityLog(log: any): Promise<ActivityLog>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -40,7 +47,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteAgent(id: number): Promise<void> {
+    await db.delete(activityLogs).where(eq(activityLogs.agentId, id));
     await db.delete(agents).where(eq(agents.id, id));
+  }
+
+  async getActivityLogs(agentId: number): Promise<ActivityLog[]> {
+    return await db.select().from(activityLogs).where(eq(activityLogs.agentId, agentId)).orderBy(desc(activityLogs.timestamp));
+  }
+
+  async createActivityLog(log: any): Promise<ActivityLog> {
+    const [newLog] = await db.insert(activityLogs).values(log).returning();
+    return newLog;
+  }
+
+  async getAllActivityLogs(): Promise<ActivityLog[]> {
+    return await db.select().from(activityLogs).orderBy(desc(activityLogs.timestamp)).limit(10);
   }
 }
 

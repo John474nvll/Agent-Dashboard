@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Search, MoreVertical, Edit2, Trash2, Play } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { AgentForm } from "@/components/AgentForm";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +23,7 @@ export default function Agents() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [search, setSearch] = useState("");
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const handleCreate = async (data: any) => {
     try {
@@ -160,7 +161,10 @@ export default function Agents() {
                       <Edit2 className="h-4 w-4 mr-2" /> Edit
                     </Button>
                   </Link>
-                  <Button className="flex-1 bg-primary/10 text-primary hover:bg-primary/20 hover:text-white border border-primary/20">
+                  <Button 
+                    className="flex-1 bg-primary/10 text-primary hover:bg-primary/20 hover:text-white border border-primary/20"
+                    onClick={() => setLocation("/playground")}
+                  >
                     <Play className="h-4 w-4 mr-2" /> Test
                   </Button>
                 </div>

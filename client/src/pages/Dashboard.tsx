@@ -1,7 +1,7 @@
 import { StatsCard } from "@/components/StatsCard";
-import { useAgents } from "@/hooks/use-agents";
+import { useAgents, useAllActivityLogs } from "@/hooks/use-agents";
 import { Users, PhoneCall, Clock, Activity, ArrowUpRight } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 const data = [
@@ -15,10 +15,12 @@ const data = [
 ];
 
 export default function Dashboard() {
-  const { data: agents, isLoading } = useAgents();
+  const { data: agents, isLoading: isLoadingAgents } = useAgents();
+  const { data: logs, isLoading: isLoadingLogs } = useAllActivityLogs();
+  const [, setLocation] = useLocation();
 
   const totalAgents = agents?.length || 0;
-  const activeAgents = agents?.filter(a => (a.config as any)?.is_published).length || 0;
+  const activeAgents = agents?.filter(a => (a.config as any)?.is_published || a.isDeployed === "true").length || 0;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -35,7 +37,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard 
           title="Total Agents" 
-          value={isLoading ? "..." : totalAgents.toString()} 
+          value={isLoadingAgents ? "..." : totalAgents.toString()} 
           icon={Users} 
           color="blue"
           trend="+2"
@@ -57,7 +59,7 @@ export default function Dashboard() {
         />
         <StatsCard 
           title="Active Deployments" 
-          value={isLoading ? "..." : activeAgents.toString()} 
+          value={isLoadingAgents ? "..." : activeAgents.toString()} 
           icon={Activity} 
           color="orange"
         />
@@ -90,19 +92,35 @@ export default function Dashboard() {
         <div className="glass-card rounded-2xl p-6">
           <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
           <div className="space-y-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-start gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
-                <div className="h-2 w-2 mt-2 rounded-full bg-blue-500 shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Inbound Call Handled</p>
-                  <p className="text-xs text-muted-foreground">Agent: Support Bot v2 • 2m ago</p>
+            {isLoadingLogs ? (
+              [1, 2, 3].map(i => <div key={i} className="h-12 w-full animate-pulse bg-white/5 rounded-lg" />)
+            ) : logs?.length === 0 ? (
+              <div className="text-sm text-muted-foreground text-center py-8">No recent activity</div>
+            ) : (
+              logs?.map((log: any) => (
+                <div 
+                  key={log.id} 
+                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                  onClick={() => setLocation(`/agents/${log.agentId}`)}
+                >
+                  <div className={`h-2 w-2 mt-2 rounded-full shrink-0 ${
+                    log.type === 'deployment' ? 'bg-blue-500' : 'bg-green-500'
+                  }`} />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{log.details}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {log.type} • {new Date(log.timestamp).toLocaleTimeString()}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-          <button className="w-full mt-4 text-xs font-medium text-muted-foreground hover:text-primary transition-colors text-center py-2">
-            View All Activity
-          </button>
+          <Link href="/agents">
+            <button className="w-full mt-4 text-xs font-medium text-muted-foreground hover:text-primary transition-colors text-center py-2">
+              Manage All Agents
+            </button>
+          </Link>
         </div>
       </div>
     </div>

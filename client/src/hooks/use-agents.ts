@@ -96,3 +96,29 @@ export function useDeleteAgent() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: [api.agents.list.path] }),
   });
 }
+
+// GET /api/agents/:id/logs
+export function useActivityLogs(id: number) {
+  return useQuery({
+    queryKey: [api.agents.logs.path, id],
+    queryFn: async () => {
+      const url = buildUrl(api.agents.logs.path, { id });
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) throw new Error('Failed to fetch logs');
+      return await res.json();
+    },
+    enabled: !!id,
+  });
+}
+
+// GET /api/activity-logs
+export function useAllActivityLogs() {
+  return useQuery({
+    queryKey: [api.agents.allLogs.path],
+    queryFn: async () => {
+      const res = await fetch(api.agents.allLogs.path, { credentials: "include" });
+      if (!res.ok) throw new Error('Failed to fetch global logs');
+      return await res.json();
+    },
+  });
+}
