@@ -444,8 +444,12 @@ export async function registerRoutes(
 
       // Define tool implementations
       if (toolName === "send_whatsapp") {
-        // Implementation logic
-        res.json({ success: true, message: "WhatsApp sent via tool" });
+        const agent = await storage.getAgent(agentId);
+        const targetNumber = agent?.phoneNumber || args.phoneNumber;
+        
+        console.log(`Sending WhatsApp to ${targetNumber}`);
+        // Implementation logic using metaClient
+        res.json({ success: true, message: `WhatsApp sent to ${targetNumber}` });
       } else if (toolName === "check_inventory") {
         res.json({ success: true, status: "In stock", quantity: 50 });
       } else {

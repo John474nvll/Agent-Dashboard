@@ -2,6 +2,22 @@ import { pgTable, text, serial, boolean, timestamp, jsonb, integer } from "drizz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+  isAdmin: boolean("is_admin").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertUserSchema = createInsertSchema(users).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+
 export const agents = pgTable("agents", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -9,7 +25,8 @@ export const agents = pgTable("agents", {
   type: text("type").notNull().default("voice"), 
   config: jsonb("config").notNull(), 
   isActive: boolean("is_active").default(false),
-  phoneId: text("phone_id"), // Added for Retell/Twilio phone link
+  phoneId: text("phone_id"),
+  phoneNumber: text("phone_number"), // Admin's personal phone for this agent
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

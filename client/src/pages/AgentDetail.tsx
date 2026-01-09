@@ -224,6 +224,25 @@ export default function AgentDetail() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
+                        name="phoneNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2">
+                              <Phone className="h-3 w-3" /> Número de Celular (Admin)
+                            </FormLabel>
+                            <FormControl>
+                              <Input placeholder="+57..." {...field} className="bg-background/50 border-border/50 font-mono text-sm" />
+                            </FormControl>
+                            <FormDescription className="text-xs">
+                              Número personal para recibir alertas o pruebas.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
                         name="voiceId"
                         render={({ field }) => (
                           <FormItem>
