@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import OpenAI from "openai";
+import { externalServices } from "./lib/external-services";
 
 const openai = new OpenAI({
   apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
@@ -129,6 +130,55 @@ export async function registerRoutes(
   app.get(api.agents.allLogs.path, async (req, res) => {
     const logs = await storage.getAllActivityLogs();
     res.json(logs);
+  });
+
+  // Real-world integration endpoints
+  app.post("/api/integrations/whatsapp", async (req, res) => {
+    const { to, message, agentId } = req.body;
+    try {
+      const result = await externalServices.sendWhatsAppMessage({ to, message });
+      
+      if (agentId) {
+        await storage.createActivityLog({
+          agentId: Number(agentId),
+          type: "whatsapp",
+          status: "success",
+          details: `WhatsApp message sent to ${to}`
+        });
+      }
+      
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/integrations/voice-call", async (req, res) => {
+    const { to, agentId } = req.body;
+    try {
+      const agent = await storage.getAgent(Number(agentId));
+      if (!agent) return res.status(404).json({ error: "Agent not found" });
+
+      const retellAgentId = agent.agentId || (agent.name.includes("Valentina")
+        ? "agent_785d337996ff481d04460638ea"
+        : "agent_2def185f1b192cd18262586ad9");
+
+      const result = await externalServices.createRetellCall({ 
+        to, 
+        agentId: retellAgentId 
+      });
+
+      await storage.createActivityLog({
+        agentId: agent.id,
+        type: "call",
+        status: "success",
+        details: `Real voice call initiated to ${to} using Retell`
+      });
+
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
   });
 
   // New endpoint for real agent text interaction using OpenAI
