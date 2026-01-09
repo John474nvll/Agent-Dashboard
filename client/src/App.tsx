@@ -10,6 +10,7 @@ import AgentDetail from "@/pages/AgentDetail";
 import Settings from "@/pages/Settings";
 import Deployments from "@/pages/Deployments";
 import WhatsAppModule from "@/pages/WhatsApp";
+import Statistics from "@/pages/Statistics";
 
 function Router() {
   return (
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/settings" component={Settings} />
       <Route path="/deployments" component={Deployments} />
       <Route path="/whatsapp" component={WhatsAppModule} />
+      <Route path="/statistics" component={Statistics} />
       <Route component={NotFound} />
     </Switch>
   );
