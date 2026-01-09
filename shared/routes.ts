@@ -58,6 +58,25 @@ export const api = {
         404: errorSchemas.notFound,
       },
     },
+    deploy: {
+      method: 'POST' as const,
+      path: '/api/agents/:id/deploy',
+      responses: {
+        200: z.object({ success: z.boolean(), agentId: z.string() }),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+      },
+    },
+    testCall: {
+      method: 'POST' as const,
+      path: '/api/agents/:id/test-call',
+      input: z.object({ phoneNumber: z.string().optional() }),
+      responses: {
+        200: z.object({ callId: z.string(), webUrl: z.string().optional() }),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+      },
+    },
   },
 };
 

@@ -62,6 +62,38 @@ export async function registerRoutes(
     res.status(204).send();
   });
 
+  app.post(api.agents.deploy.path, async (req, res) => {
+    const agent = await storage.getAgent(Number(req.params.id));
+    if (!agent) return res.status(404).json({ message: "Agent not found" });
+    
+    // Simulate Retell AI deployment
+    console.log(`Deploying agent ${agent.name} to Retell AI...`);
+    const mockRetellId = `retell_${Math.random().toString(36).substr(2, 9)}`;
+    
+    await storage.updateAgent(agent.id, { 
+      agentId: mockRetellId,
+      isDeployed: "true"
+    });
+    
+    res.json({ success: true, agentId: mockRetellId });
+  });
+
+  app.post(api.agents.testCall.path, async (req, res) => {
+    const agent = await storage.getAgent(Number(req.params.id));
+    if (!agent) return res.status(404).json({ message: "Agent not found" });
+    
+    if (agent.isDeployed !== "true") {
+      return res.status(400).json({ message: "Agent must be deployed before testing" });
+    }
+
+    // Simulate starting a Retell web call
+    const mockCallId = `call_${Math.random().toString(36).substr(2, 9)}`;
+    res.json({ 
+      callId: mockCallId, 
+      webUrl: `https://retellai.com/widget/${agent.agentId}` 
+    });
+  });
+
   // Seed Data
   await seedDatabase();
 

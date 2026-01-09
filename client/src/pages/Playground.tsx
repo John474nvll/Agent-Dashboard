@@ -1,18 +1,42 @@
 import { useState } from "react";
-import { Mic, Phone, MicOff, Send, MessageSquare } from "lucide-react";
+import { Mic, Phone, MicOff, Send, MessageSquare, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAgents } from "@/hooks/use-agents";
 import { Input } from "@/components/ui/input";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import clsx from "clsx";
 
 export default function Playground() {
   const { data: agents } = useAgents();
+  const { toast } = useToast();
   const [selectedAgent, setSelectedAgent] = useState<string>("");
   const [isRecording, setIsRecording] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [callData, setCallData] = useState<{ webUrl?: string } | null>(null);
   const [messages, setMessages] = useState<{ role: 'user' | 'bot', text: string }[]>([
     { role: 'bot', text: "Hello! Select an agent to start testing." }
   ]);
+
+  const handleStartTest = async () => {
+    if (!selectedAgent) return;
+    setIsTesting(true);
+    try {
+      const res = await apiRequest("POST", `/api/agents/${selectedAgent}/test-call`, {});
+      const data = await res.json();
+      setCallData(data);
+      toast({ title: "Test Call Started", description: "You can now test the agent using the web widget." });
+    } catch (error: any) {
+      toast({ 
+        title: "Test Error", 
+        description: error.message || "Ensure the agent is deployed before testing.", 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsTesting(false);
+    }
+  };
 
   const handleSend = () => {
     // Mock interaction for UI purposes
@@ -26,6 +50,8 @@ export default function Playground() {
     }
   };
 
+  const currentAgent = agents?.find(a => a.id.toString() === selectedAgent);
+
   return (
     <div className="h-[calc(100vh-2rem)] flex flex-col gap-6 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
@@ -33,17 +59,27 @@ export default function Playground() {
           <h2 className="text-3xl font-display font-bold text-white">Playground</h2>
           <p className="text-muted-foreground">Test your agents in a simulated environment</p>
         </div>
-        <div className="w-64">
-          <Select value={selectedAgent} onValueChange={setSelectedAgent}>
-            <SelectTrigger className="bg-card border-white/10">
-              <SelectValue placeholder="Select Agent to Test" />
-            </SelectTrigger>
-            <SelectContent>
-              {agents?.map(a => (
-                <SelectItem key={a.id} value={a.id.toString()}>{a.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex gap-4 items-center">
+          <div className="w-64">
+            <Select value={selectedAgent} onValueChange={setSelectedAgent}>
+              <SelectTrigger className="bg-card border-white/10">
+                <SelectValue placeholder="Select Agent to Test" />
+              </SelectTrigger>
+              <SelectContent>
+                {agents?.map(a => (
+                  <SelectItem key={a.id} value={a.id.toString()}>{a.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button 
+            onClick={handleStartTest} 
+            disabled={!selectedAgent || isTesting}
+            variant="default"
+          >
+            {isTesting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Phone className="h-4 w-4 mr-2" />}
+            {currentAgent?.isDeployed === "true" ? "Start Voice Test" : "Deploy First"}
+          </Button>
         </div>
       </div>
 
@@ -101,14 +137,23 @@ export default function Playground() {
             </div>
             <h3 className="text-lg font-bold">Voice Simulation</h3>
             <p className="text-sm text-muted-foreground">Status: {isRecording ? "Listening..." : "Idle"}</p>
+            
+            {callData?.webUrl && (
+              <Button asChild variant="outline" className="mt-4 border-white/10">
+                <a href={callData.webUrl} target="_blank" rel="noopener noreferrer">
+                  Open Retell Widget <ExternalLink className="ml-2 h-4 w-4" />
+                </a>
+              </Button>
+            )}
           </div>
 
           <div className="space-y-4 flex-1">
             <h4 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">Debug Info</h4>
             <div className="space-y-2 text-xs font-mono bg-black/30 p-4 rounded-lg h-full overflow-y-auto">
               <p className="text-green-400">{">"} Connection established</p>
-              <p className="text-blue-400">{">"} Latency: 45ms</p>
-              <p className="text-yellow-400">{">"} Voice VAD: Active</p>
+              {currentAgent && <p className="text-white">{">"} Agent: {currentAgent.name}</p>}
+              <p className="text-blue-400">{">"} Status: {currentAgent?.isDeployed === "true" ? "Deployed" : "Not Deployed"}</p>
+              {callData && <p className="text-purple-400">{">"} Call session started</p>}
               {isRecording && <p className="text-white animate-pulse">{">"} Detecting speech...</p>}
             </div>
           </div>

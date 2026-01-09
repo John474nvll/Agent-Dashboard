@@ -10,6 +10,8 @@ export const agents = pgTable("agents", {
   voiceId: text("voice_id"),
   language: text("language"),
   config: jsonb("config").notNull(), // Stores the complete configuration object
+  retellApiKey: text("retell_api_key"), // Secret API key for Retell
+  isDeployed: text("is_deployed").default("false"), // Track deployment status
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
