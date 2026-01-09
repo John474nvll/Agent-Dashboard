@@ -1,4 +1,3 @@
-
 import { pgTable, text, serial, boolean, timestamp, jsonb, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -26,6 +25,16 @@ export const calls = pgTable("calls", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const whatsAppMessages = pgTable("whatsapp_messages", {
+  id: serial("id").primaryKey(),
+  agentId: integer("agent_id").references(() => agents.id),
+  waId: text("wa_id").notNull(), // WhatsApp Business ID for the contact
+  direction: text("direction").notNull(), // inbound, outbound
+  message: text("message").notNull(),
+  status: text("status"), // sent, delivered, read
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
 export const insertAgentSchema = createInsertSchema(agents).omit({ 
   id: true, 
   createdAt: true, 
@@ -37,7 +46,14 @@ export const insertCallSchema = createInsertSchema(calls).omit({
   createdAt: true
 });
 
+export const insertWhatsAppMessageSchema = createInsertSchema(whatsAppMessages).omit({
+  id: true,
+  timestamp: true
+});
+
 export type Agent = typeof agents.$inferSelect;
 export type InsertAgent = z.infer<typeof insertAgentSchema>;
 export type Call = typeof calls.$inferSelect;
 export type InsertCall = z.infer<typeof insertCallSchema>;
+export type WhatsAppMessage = typeof whatsAppMessages.$inferSelect;
+export type InsertWhatsAppMessage = z.infer<typeof insertWhatsAppMessageSchema>;
