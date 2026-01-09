@@ -1,45 +1,46 @@
 # Multi-Agent Voice & WhatsApp System
 
-An AI-powered system for business development and sales using Retell AI for real-time voice communication and WhatsApp Business integration.
+Sistema de desarrollo de negocios y ventas impulsado por IA que combina comunicación de voz en tiempo real (Retell AI) con mensajería de WhatsApp Business.
 
-## Features
+## Características
 
-- **Multi-Agent Architecture**: Support for specialized agents (BDR, Technical Sales, etc.).
-- **Retell AI Integration**: Real-time voice capabilities with low latency and high-quality Spanish voices.
-- **WhatsApp Business**: Integrated messaging for each agent.
-- **Drizzle ORM & PostgreSQL**: Robust data persistence for agents, calls, and message history.
-- **Express.js Backend**: Scalable API for agent management and webhook handling.
-- **React Frontend**: Modern UI for monitoring and managing AI agents.
+- **Agentes de Voz Especializados**: BDR y Ventas Técnicas con acentos regionales en español.
+- **Integración con WhatsApp**: Comunicación bidireccional mediante la API de WhatsApp Business.
+- **Dashboard de Estadísticas**: Visualización de métricas de llamadas y mensajes.
+- **Configuración Dinámica**: Gestión de agentes, números de teléfono y herramientas.
+- **Interfaz Moderna**: Tema "Verde Neón Bosque" con efectos de cristal (glassmorphism).
 
-## Tech Stack
+## Requisitos del Sistema
 
-- **Backend**: Node.js, Express.js
-- **Frontend**: React, Vite, Tailwind CSS, Shadcn UI
-- **Database**: PostgreSQL with Drizzle ORM
-- **Voice**: Retell AI
-- **Messaging**: Twilio / WhatsApp Business API
+- **Node.js**: v20 o superior
+- **Base de Datos**: PostgreSQL
+- **APIs Externas**:
+  - Retell AI (Voz)
+  - Twilio / Meta WhatsApp Business API (Mensajería)
 
-## Getting Started
+## Configuración
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
+Es necesario configurar las siguientes variables de entorno:
 
-2. Set up environment variables:
-   - `DATABASE_URL`
-   - `RETELL_API_KEY`
-   - `TWILIO_ACCOUNT_SID`
-   - `TWILIO_AUTH_TOKEN`
+- `DATABASE_URL`: Conexión a PostgreSQL.
+- `RETELL_API_KEY`: Clave de API para Retell AI.
+- `TWILIO_ACCOUNT_SID` & `TWILIO_AUTH_TOKEN`: Credenciales de Twilio.
+- `META_ACCESS_TOKEN`: Token de acceso para la API de Meta Business.
 
-3. Run the development server:
-   ```bash
-   npm run dev
-   ```
+## Desarrollo
 
-## Project Structure
+Para iniciar el entorno de desarrollo:
 
-- `server/`: Express backend and API routes.
-- `client/`: React frontend application.
-- `shared/`: Shared types and database schema.
-- `attached_assets/`: Static assets and generated content.
+```bash
+npm run dev
+```
+
+El servidor estará disponible en el puerto 5000.
+
+## Arquitectura
+
+- **Backend**: Express.js + TypeScript con Drizzle ORM.
+- **Frontend**: React + Vite + Tailwind CSS + Radix UI.
+- **Diseño**: Personalizado con paleta "Neon Forest Green" y componentes Shadcn.
+- **Voz**: Retell AI SDK.
+- **Mensajería**: WhatsApp Business SDK / Twilio.
