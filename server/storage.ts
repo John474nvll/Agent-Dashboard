@@ -42,9 +42,9 @@ export class DatabaseStorage implements IStorage {
     await db.delete(agents).where(eq(agents.id, id));
   }
 
-  async createCall(call: InsertCall): Promise<Call> {
-    const [call] = await db.insert(calls).values(insertCall).returning();
-    return call;
+  async createCall(insertCall: InsertCall): Promise<Call> {
+    const [newCall] = await db.insert(calls).values(insertCall).returning();
+    return newCall;
   }
 
   async getCallsByAgent(agentId: number): Promise<Call[]> {

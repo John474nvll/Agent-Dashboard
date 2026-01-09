@@ -6,7 +6,9 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import Retell from "retell-sdk";
 import twilio from "twilio";
-import { FacebookAdsApi, WhatsAppBusinessAccount } from "facebook-nodejs-business-sdk";
+
+// @ts-ignore
+import { FacebookAdsApi } from "facebook-nodejs-business-sdk";
 
 const retell = new Retell({
   apiKey: process.env.RETELL_API_KEY || "",
