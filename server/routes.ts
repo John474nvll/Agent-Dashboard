@@ -433,5 +433,25 @@ export async function registerRoutes(
     }
   });
 
-  return httpServer;
-}
+  // Agent Tool Invocation Route
+  app.post("/api/agents/:id/tools/:toolName", async (req, res) => {
+    try {
+      const agentId = Number(req.params.id);
+      const { toolName } = req.params;
+      const args = req.body;
+
+      console.log(`Tool ${toolName} invoked for agent ${agentId} with args:`, args);
+
+      // Define tool implementations
+      if (toolName === "send_whatsapp") {
+        // Implementation logic
+        res.json({ success: true, message: "WhatsApp sent via tool" });
+      } else if (toolName === "check_inventory") {
+        res.json({ success: true, status: "In stock", quantity: 50 });
+      } else {
+        res.status(404).json({ message: "Tool not implemented" });
+      }
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });

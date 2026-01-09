@@ -266,6 +266,7 @@ export default function AgentDetail() {
                 <Tabs defaultValue="prompt" className="w-full">
                   <TabsList className="bg-card/50 border border-border/50 p-1">
                     <TabsTrigger value="prompt">System Prompt</TabsTrigger>
+                    <TabsTrigger value="tools">Herramientas (Tools)</TabsTrigger>
                     <TabsTrigger value="history">Historial de Llamadas</TabsTrigger>
                     <TabsTrigger value="json">Raw JSON</TabsTrigger>
                   </TabsList>
@@ -295,6 +296,36 @@ export default function AgentDetail() {
                             </FormItem>
                           )}
                         />
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="tools" className="mt-4">
+                    <Card className="glass-card border-border/50">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <FileCode className="h-5 w-5 text-primary" /> Herramientas Disponibles
+                        </CardTitle>
+                        <CardDescription>
+                          Habilita funciones especiales que el agente puede ejecutar durante una conversación.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {[
+                            { name: "send_whatsapp", label: "Enviar WhatsApp", description: "Permite al agente enviar mensajes de seguimiento." },
+                            { name: "check_inventory", label: "Consultar Inventario", description: "Permite verificar disponibilidad de productos." },
+                            { name: "schedule_meeting", label: "Agendar Cita", description: "Integración con calendario para programar reuniones." }
+                          ].map((tool) => (
+                            <div key={tool.name} className="flex items-center justify-between p-4 rounded-lg bg-background/30 border border-border/50">
+                              <div>
+                                <p className="font-medium">{tool.label}</p>
+                                <p className="text-xs text-muted-foreground">{tool.description}</p>
+                              </div>
+                              <Switch defaultChecked={true} />
+                            </div>
+                          ))}
+                        </div>
                       </CardContent>
                     </Card>
                   </TabsContent>
