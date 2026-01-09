@@ -234,6 +234,12 @@ export async function registerRoutes(
     res.json({ success: true, message: `Agent ${agent.name} deployed successfully!` });
   });
 
+  app.get("/api/agents/:id/calls", async (req, res) => {
+    const agentId = Number(req.params.id);
+    const calls = await storage.getCallsByAgent(agentId);
+    res.json(calls);
+  });
+
   app.post(api.agents.makeCall.path, async (req, res) => {
     try {
       const { phoneNumber } = api.agents.makeCall.input.parse(req.body);

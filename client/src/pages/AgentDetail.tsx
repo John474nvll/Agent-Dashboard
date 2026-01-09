@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { useAgent, useUpdateAgent, useDeleteAgent } from "@/hooks/use-agents";
 import { useRoute, useLocation } from "wouter";
@@ -11,9 +11,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, Trash2, Bot, Mic2, FileCode } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Bot, Mic2, FileCode, History, Phone, Clock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
+import { api, buildUrl } from "@shared/routes";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,14 +27,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 
 // Schema for the edit form
 const formSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "El nombre es obligatorio"),
   description: z.string().optional(),
   voiceId: z.string().optional(),
   llmId: z.string().optional(),
-  generalPrompt: z.string().min(10, "Prompt must be at least 10 characters"),
+  generalPrompt: z.string().min(10, "El prompt debe tener al menos 10 caracteres"),
   isActive: z.boolean(),
 });
 
@@ -46,6 +49,12 @@ export default function AgentDetail() {
   const { data: agent, isLoading } = useAgent(id);
   const updateAgent = useUpdateAgent();
   const deleteAgent = useDeleteAgent();
+
+  // Fetch calls for this agent
+  const { data: calls } = useQuery({
+    queryKey: [`/api/agents/${id}/calls`],
+    enabled: !!id,
+  });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -75,7 +84,6 @@ export default function AgentDetail() {
   }, [agent, form]);
 
   const onSubmit = (data: FormValues) => {
-    // Reconstruct the config object
     const updatedConfig = {
       ...(agent?.config as object || {}),
       voice_id: data.voiceId,
@@ -115,8 +123,8 @@ export default function AgentDetail() {
     return (
       <Layout>
         <div className="text-center py-20">
-          <h2 className="text-2xl font-bold">Agent Not Found</h2>
-          <Button className="mt-4" onClick={() => setLocation("/agents")}>Back to List</Button>
+          <h2 className="text-2xl font-bold">Agente no encontrado</h2>
+          <Button className="mt-4" onClick={() => setLocation("/agents")}>Volver a la lista</Button>
         </div>
       </Layout>
     );
@@ -135,7 +143,7 @@ export default function AgentDetail() {
               <h1 className="text-2xl font-bold font-display">{agent.name}</h1>
               <p className="text-sm text-muted-foreground flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-primary/50" />
-                {agent.type.toUpperCase()} AGENT
+                AGENTE DE {agent.type.toUpperCase()}
               </p>
             </div>
           </div>
@@ -149,22 +157,22 @@ export default function AgentDetail() {
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the agent
-                    and remove its data from our servers.
+                    Esta acción no se puede deshacer. Esto eliminará permanentemente al agente
+                    y sus datos de nuestros servidores.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
                   <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Delete Agent
+                    Eliminar Agente
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
             <Button onClick={form.handleSubmit(onSubmit)} disabled={updateAgent.isPending} className="bg-primary hover:bg-primary/90">
-              {updateAgent.isPending ? "Saving..." : <><Save className="mr-2 h-4 w-4" /> Save Changes</>}
+              {updateAgent.isPending ? "Guardando..." : <><Save className="mr-2 h-4 w-4" /> Guardar Cambios</>}
             </Button>
           </div>
         </div>
@@ -173,15 +181,14 @@ export default function AgentDetail() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               
-              {/* Left Column: Config */}
               <div className="lg:col-span-2 space-y-6">
                 <Card className="glass-card border-border/50">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Bot className="h-5 w-5 text-primary" /> Agent Configuration
+                      <Bot className="h-5 w-5 text-primary" /> Configuración del Agente
                     </CardTitle>
                     <CardDescription>
-                      Basic settings for identity and behavior.
+                      Ajustes básicos de identidad y comportamiento.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
@@ -190,9 +197,9 @@ export default function AgentDetail() {
                       name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Agent Name</FormLabel>
+                          <FormLabel>Nombre del Agente</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g. Sales Rep Santi" {...field} className="bg-background/50 border-border/50 focus:ring-primary/20" />
+                            <Input placeholder="ej. Representante de Ventas Santi" {...field} className="bg-background/50 border-border/50 focus:ring-primary/20" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -204,9 +211,9 @@ export default function AgentDetail() {
                       name="description"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Description</FormLabel>
+                          <FormLabel>Descripción</FormLabel>
                           <FormControl>
-                            <Input placeholder="Internal description" {...field} className="bg-background/50 border-border/50" />
+                            <Input placeholder="Descripción interna" {...field} className="bg-background/50 border-border/50" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -226,7 +233,7 @@ export default function AgentDetail() {
                               <Input placeholder="Retell Voice ID" {...field} className="bg-background/50 border-border/50 font-mono text-sm" />
                             </FormControl>
                             <FormDescription className="text-xs">
-                              ID from Retell dashboard
+                              ID del panel de Retell
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -245,7 +252,7 @@ export default function AgentDetail() {
                               <Input placeholder="LLM ID" {...field} className="bg-background/50 border-border/50 font-mono text-sm" />
                             </FormControl>
                             <FormDescription className="text-xs">
-                              The linked LLM configuration
+                              La configuración del LLM vinculado
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -258,6 +265,7 @@ export default function AgentDetail() {
                 <Tabs defaultValue="prompt" className="w-full">
                   <TabsList className="bg-card/50 border border-border/50 p-1">
                     <TabsTrigger value="prompt">System Prompt</TabsTrigger>
+                    <TabsTrigger value="history">Historial de Llamadas</TabsTrigger>
                     <TabsTrigger value="json">Raw JSON</TabsTrigger>
                   </TabsList>
                   
@@ -266,7 +274,7 @@ export default function AgentDetail() {
                       <CardHeader>
                         <CardTitle>System Prompt</CardTitle>
                         <CardDescription>
-                          Define the personality, knowledge base, and instructions for the agent.
+                          Define la personalidad, base de conocimientos e instrucciones para el agente.
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
@@ -277,7 +285,7 @@ export default function AgentDetail() {
                             <FormItem>
                               <FormControl>
                                 <Textarea 
-                                  placeholder="You are a helpful assistant..." 
+                                  placeholder="Eres un asistente útil..." 
                                   className="min-h-[300px] font-mono text-sm bg-background/50 border-border/50 leading-relaxed resize-y focus:ring-primary/20" 
                                   {...field} 
                                 />
@@ -286,6 +294,44 @@ export default function AgentDetail() {
                             </FormItem>
                           )}
                         />
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="history" className="mt-4">
+                    <Card className="glass-card border-border/50">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <History className="h-5 w-5 text-primary" /> Llamadas Recientes
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {calls?.length === 0 ? (
+                            <div className="text-center py-10 text-muted-foreground italic">
+                              No hay llamadas registradas para este agente.
+                            </div>
+                          ) : (
+                            calls?.map((call: any) => (
+                              <div key={call.id} className="flex items-center justify-between p-4 rounded-lg bg-background/30 border border-border/50">
+                                <div className="flex items-center gap-4">
+                                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <Phone className="h-4 w-4 text-primary" />
+                                  </div>
+                                  <div>
+                                    <p className="font-medium">{call.phoneNumber}</p>
+                                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                      <Clock className="h-3 w-3" /> {new Date(call.createdAt).toLocaleString()}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Badge variant={call.status === 'completed' ? 'default' : 'secondary'}>
+                                  {call.status}
+                                </Badge>
+                              </div>
+                            ))
+                          )}
+                        </div>
                       </CardContent>
                     </Card>
                   </TabsContent>
@@ -302,11 +348,10 @@ export default function AgentDetail() {
                 </Tabs>
               </div>
 
-              {/* Right Column: Status & Metadata */}
               <div className="space-y-6">
                 <Card className="glass-card border-border/50">
                   <CardHeader>
-                    <CardTitle>Status</CardTitle>
+                    <CardTitle>Estado</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
                      <FormField
@@ -315,9 +360,9 @@ export default function AgentDetail() {
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border/50 p-4 bg-background/30">
                           <div className="space-y-0.5">
-                            <FormLabel className="text-base">Active Status</FormLabel>
+                            <FormLabel className="text-base">Estado Activo</FormLabel>
                             <FormDescription>
-                              Enable to allow calls.
+                              Habilita para permitir llamadas.
                             </FormDescription>
                           </div>
                           <FormControl>
@@ -332,15 +377,15 @@ export default function AgentDetail() {
                     
                     <div className="pt-4 border-t border-border/50 space-y-3">
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Created</span>
+                        <span className="text-muted-foreground">Creado</span>
                         <span>{new Date(agent.createdAt!).toLocaleDateString()}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Last Updated</span>
+                        <span className="text-muted-foreground">Última actualización</span>
                         <span>{new Date(agent.updatedAt!).toLocaleDateString()}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Type</span>
+                        <span className="text-muted-foreground">Tipo</span>
                         <span className="capitalize">{agent.type}</span>
                       </div>
                     </div>
