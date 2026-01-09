@@ -157,24 +157,37 @@ const VALENTINA_CONFIG = {
   }
 };
 
-async function seedDatabase() {
+async function seedDatabase(force = false) {
   const existingAgents = await storage.getAgents();
-  if (existingAgents.length === 0) {
-    console.log("Seeding initial agents...");
-    await storage.createAgent({
-      name: "Santi",
-      description: "Business Development Representative - SoftGAN",
-      type: "voice",
-      config: SANTI_CONFIG,
-      isActive: true,
-    });
-    await storage.createAgent({
-      name: "Valentina",
-      description: "Senior Technical Sales Executive - Softgan Electronics",
-      type: "voice",
-      config: VALENTINA_CONFIG,
-      isActive: true,
-    });
+  if (existingAgents.length === 0 || force) {
+    if (force) {
+      console.log("Forcing re-seed of database...");
+      // In a real scenario we might delete calls too, but for safety we just ensure V1 agents exist
+    }
+    console.log("Seeding initial agents (V1)...");
+    
+    // Check if Santi exists if not forcing
+    const hasSanti = existingAgents.some(a => a.name === "Santi");
+    if (!hasSanti || force) {
+      await storage.createAgent({
+        name: "Santi",
+        description: "Business Development Representative - SoftGAN",
+        type: "voice",
+        config: SANTI_CONFIG,
+        isActive: true,
+      });
+    }
+
+    const hasValentina = existingAgents.some(a => a.name === "Valentina");
+    if (!hasValentina || force) {
+      await storage.createAgent({
+        name: "Valentina",
+        description: "Senior Technical Sales Executive - Softgan Electronics",
+        type: "voice",
+        config: VALENTINA_CONFIG,
+        isActive: true,
+      });
+    }
     console.log("Agents seeded successfully.");
   }
 }
@@ -183,8 +196,8 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // Seed the database on startup
-  await seedDatabase();
+  // Seed the database on startup (default false)
+  await seedDatabase(true);
 
   app.get(api.agents.list.path, async (req, res) => {
     const agents = await storage.getAgents();
