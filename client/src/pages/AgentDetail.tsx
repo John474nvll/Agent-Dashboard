@@ -15,7 +15,6 @@ import { ArrowLeft, Save, Trash2, Bot, Mic2, FileCode, History, Phone, Clock, Pl
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@shared/routes";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,7 +28,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 
-// Schema for the edit form
 const formSchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio"),
   description: z.string().optional(),
@@ -57,14 +55,7 @@ export default function AgentDetail() {
     makeCall.mutate({ agentId: id, phoneNumber: testPhoneNumber });
   };
 
-  // Fetch calls for this agent
-  const { data: calls } = useQuery({
-    queryKey: [`/api/agents/${id}/calls`],
-    enabled: !!id,
-  });
-
-  // Fetch calls for this agent
-  const { data: calls } = useQuery({
+  const { data: calls } = useQuery<any[]>({
     queryKey: [`/api/agents/${id}/calls`],
     enabled: !!id,
   });
@@ -81,7 +72,6 @@ export default function AgentDetail() {
     },
   });
 
-  // Load data into form when agent is fetched
   useEffect(() => {
     if (agent) {
       const config = agent.config as Record<string, any>;
@@ -90,7 +80,7 @@ export default function AgentDetail() {
         description: agent.description || "",
         voiceId: config.voice_id || "",
         llmId: config.llm_id || "",
-        generalPrompt: config.general_prompt || "",
+        generalPrompt: config.general_prompt || config.retellLlmData?.general_prompt || "",
         isActive: agent.isActive || false,
       });
     }
@@ -146,7 +136,6 @@ export default function AgentDetail() {
   return (
     <Layout>
       <div className="max-w-5xl mx-auto space-y-8">
-        {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => setLocation("/agents")} className="rounded-full hover:bg-white/5">
@@ -193,7 +182,6 @@ export default function AgentDetail() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              
               <div className="lg:col-span-2 space-y-6">
                 <Card className="glass-card border-border/50">
                   <CardHeader>
@@ -320,12 +308,12 @@ export default function AgentDetail() {
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-4">
-                          {calls?.length === 0 ? (
+                          {!calls || calls.length === 0 ? (
                             <div className="text-center py-10 text-muted-foreground italic">
                               No hay llamadas registradas para este agente.
                             </div>
                           ) : (
-                            calls?.map((call: any) => (
+                            calls.map((call: any) => (
                               <div key={call.id} className="flex items-center justify-between p-4 rounded-lg bg-background/30 border border-border/50">
                                 <div className="flex items-center gap-4">
                                   <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
