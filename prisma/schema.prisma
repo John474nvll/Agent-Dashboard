@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model agents {
+  id                Int                 @id @default(autoincrement())
+  name              String
+  description       String?
+  type              String              @default("voice")
+  config            Json
+  is_active         Boolean?            @default(false)
+  phone_id          String?
+  created_at        DateTime?           @default(now()) @db.Timestamp(6)
+  updated_at        DateTime?           @default(now()) @db.Timestamp(6)
+  phone_number      String?
+  calls             calls[]
+  whatsapp_messages whatsapp_messages[]
+}
+
+model calls {
+  id             Int       @id @default(autoincrement())
+  agent_id       Int?
+  phone_number   String
+  status         String
+  retell_call_id String?
+  transcript     String?
+  recording_url  String?
+  created_at     DateTime? @default(now()) @db.Timestamp(6)
+  agents         agents?   @relation(fields: [agent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "calls_agent_id_agents_id_fk")
+}
+
+model users {
+  id         Int       @id @default(autoincrement())
+  username   String    @unique(map: "users_username_unique")
+  password   String
+  is_admin   Boolean?  @default(false)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model whatsapp_messages {
+  id        Int       @id @default(autoincrement())
+  agent_id  Int?
+  wa_id     String
+  direction String
+  message   String
+  status    String?
+  timestamp DateTime? @default(now()) @db.Timestamp(6)
+  agents    agents?   @relation(fields: [agent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "whatsapp_messages_agent_id_agents_id_fk")
+}
