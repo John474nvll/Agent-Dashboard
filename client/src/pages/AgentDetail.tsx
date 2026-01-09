@@ -228,13 +228,29 @@ export default function AgentDetail() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="flex items-center gap-2">
-                              <Mic2 className="h-3 w-3" /> Voice ID
+                              <Mic2 className="h-3 w-3" /> Voice ID & Accent
                             </FormLabel>
                             <FormControl>
-                              <Input placeholder="Retell Voice ID" {...field} className="bg-background/50 border-border/50 font-mono text-sm" />
+                              <select 
+                                {...field} 
+                                className="w-full bg-background/50 border border-border/50 rounded-md p-2 text-sm font-mono"
+                              >
+                                <optgroup label="Español (Acentos)">
+                                  <option value="11labs-Bing">Santi (España - Enérgico)</option>
+                                  <option value="11labs-Susan">Valentina (Bogotá - Ejecutivo)</option>
+                                  <option value="11labs-Adrian">Mateo (México - Consultor)</option>
+                                  <option value="11labs-Bella">Sofía (Argentina - Cercano)</option>
+                                  <option value="11labs-Domi">Elena (Chile - Profesional)</option>
+                                </optgroup>
+                                <optgroup label="English">
+                                  <option value="11labs-Brian">Brian (US - Deep)</option>
+                                  <option value="11labs-Sarah">Sarah (UK - Clear)</option>
+                                </optgroup>
+                                <option value="custom">-- Otro (Ingresar ID manual) --</option>
+                              </select>
                             </FormControl>
                             <FormDescription className="text-xs">
-                              ID del panel de Retell
+                              Selecciona la voz y el acento regional del agente.
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
