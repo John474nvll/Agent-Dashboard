@@ -328,11 +328,35 @@ export async function registerRoutes(
       const agent = await storage.getAgent(agentId);
       if (!agent) return res.status(404).json({ message: "Agent not found" });
 
-      // Logic for sending via Meta WhatsApp API
-      if (process.env.META_PHONE_NUMBER_ID) {
-        // Here we would use the WhatsApp Business API
-        // For now, we log and save to storage
-        console.log(`Sending WhatsApp to ${phoneNumber} from agent ${agent.name}: ${message}`);
+      // Meta WhatsApp Business API Implementation
+      if (process.env.META_ACCESS_TOKEN && process.env.META_PHONE_NUMBER_ID) {
+        try {
+          const response = await fetch(
+            `https://graph.facebook.com/v21.0/${process.env.META_PHONE_NUMBER_ID}/messages`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${process.env.META_ACCESS_TOKEN}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                messaging_product: "whatsapp",
+                recipient_type: "individual",
+                to: phoneNumber,
+                type: "text",
+                text: { body: message }
+              }),
+            }
+          );
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`Meta API error: ${JSON.stringify(errorData)}`);
+          }
+        } catch (error: any) {
+          console.error("WhatsApp Send Error:", error.message);
+          // We still save the record but mark as failed or handle locally
+        }
       }
 
       const msg = await storage.createWhatsAppMessage({
@@ -349,10 +373,51 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/agents/:id/whatsapp/messages", async (req, res) => {
-    const agentId = Number(req.params.id);
-    const messages = await storage.getWhatsAppMessagesByAgent(agentId);
-    res.json(messages);
+  // Webhook for Retell Call Updates
+  app.post("/api/webhooks/retell", async (req, res) => {
+    try {
+      const { call_id, event, transcript, recording_url } = req.body;
+      
+      if (event === "call_ended") {
+        // Update call status and data in storage
+        // This is a simplified implementation
+        console.log(`Call ${call_id} ended. Updating storage.`);
+      }
+      
+      res.status(200).send("Webhook received");
+    } catch (error: any) {
+      console.error("Webhook Error:", error.message);
+      res.status(500).send("Internal Server Error");
+    }
+  });
+
+  // Webhook for Meta WhatsApp Incoming Messages
+  app.post("/api/webhooks/whatsapp", async (req, res) => {
+    if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === process.env.META_VERIFY_TOKEN) {
+      return res.status(200).send(req.query['hub.challenge']);
+    }
+
+    try {
+      const { entry } = req.body;
+      if (entry && entry[0].changes && entry[0].changes[0].value.messages) {
+        const message = entry[0].changes[0].value.messages[0];
+        const from = message.from;
+        const text = message.text.body;
+
+        // Save incoming message
+        await storage.createWhatsAppMessage({
+          agentId: null, // Logic to determine agent could be added here
+          waId: from,
+          direction: "inbound",
+          message: text,
+          status: "received"
+        });
+      }
+      res.status(200).send("EVENT_RECEIVED");
+    } catch (error: any) {
+      console.error("WhatsApp Webhook Error:", error.message);
+      res.status(200).send("EVENT_RECEIVED"); // Always return 200 to Meta
+    }
   });
 
   return httpServer;
