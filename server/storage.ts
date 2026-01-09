@@ -1,6 +1,5 @@
-
 import { db } from "./db";
-import { agents, calls, type Agent, type InsertAgent, type Call, type InsertCall } from "@shared/schema";
+import { agents, calls, whatsAppMessages, type Agent, type InsertAgent, type Call, type InsertCall, type WhatsAppMessage, type InsertWhatsAppMessage } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 export interface IStorage {
@@ -11,6 +10,8 @@ export interface IStorage {
   deleteAgent(id: number): Promise<void>;
   createCall(call: InsertCall): Promise<Call>;
   getCallsByAgent(agentId: number): Promise<Call[]>;
+  createWhatsAppMessage(msg: InsertWhatsAppMessage): Promise<WhatsAppMessage>;
+  getWhatsAppMessagesByAgent(agentId: number): Promise<WhatsAppMessage[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -41,13 +42,22 @@ export class DatabaseStorage implements IStorage {
     await db.delete(agents).where(eq(agents.id, id));
   }
 
-  async createCall(insertCall: InsertCall): Promise<Call> {
+  async createCall(call: InsertCall): Promise<Call> {
     const [call] = await db.insert(calls).values(insertCall).returning();
     return call;
   }
 
   async getCallsByAgent(agentId: number): Promise<Call[]> {
     return await db.select().from(calls).where(eq(calls.agentId, agentId));
+  }
+
+  async createWhatsAppMessage(msg: InsertWhatsAppMessage): Promise<WhatsAppMessage> {
+    const [inserted] = await db.insert(whatsAppMessages).values(msg).returning();
+    return inserted;
+  }
+
+  async getWhatsAppMessagesByAgent(agentId: number): Promise<WhatsAppMessage[]> {
+    return await db.select().from(whatsAppMessages).where(eq(whatsAppMessages.agentId, agentId));
   }
 }
 

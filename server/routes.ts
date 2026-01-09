@@ -4,8 +4,23 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { readFileSync } from "fs";
-import path from "path";
+import Retell from "retell-sdk";
+import twilio from "twilio";
+import { FacebookAdsApi, WhatsAppBusinessAccount } from "facebook-nodejs-business-sdk";
+
+const retell = new Retell({
+  apiKey: process.env.RETELL_API_KEY || "",
+});
+
+const twilioClient = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
+
+// Meta Business SDK Setup
+if (process.env.META_ACCESS_TOKEN) {
+  FacebookAdsApi.init(process.env.META_ACCESS_TOKEN);
+}
 
 // Seed data from the attached files
 const SANTI_CONFIG = {
@@ -228,10 +243,27 @@ export async function registerRoutes(
       return res.status(404).json({ message: 'Agent not found' });
     }
     
-    // In a real scenario, this would call Retell API to deploy or start a call
-    // For now, we simulate a successful deployment signal
-    
-    res.json({ success: true, message: `Agent ${agent.name} deployed successfully!` });
+    try {
+      // In a real scenario, this would call Retell API to deploy
+      // For this implementation, we ensure the agent config is synced with Retell
+      const retellResponse = await retell.agent.create({
+        agent_name: agent.name,
+        voice_id: (agent.config as any).voice_id || "11labs-Bing",
+        response_engine: (agent.config as any).response_engine,
+      });
+
+      await storage.updateAgent(agent.id, {
+        phoneId: retellResponse.agent_id
+      });
+      
+      res.json({ 
+        success: true, 
+        message: `Agent ${agent.name} deployed to Retell successfully!`,
+        retellAgentId: retellResponse.agent_id
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
   });
 
   app.get("/api/agents/:id/calls", async (req, res) => {
@@ -250,36 +282,75 @@ export async function registerRoutes(
         return res.status(404).json({ message: 'Agent not found' });
       }
 
-      // Colombian number validation (basic)
-      const cleanNumber = phoneNumber.replace(/\D/g, '');
-      if (cleanNumber.length !== 10 && !cleanNumber.startsWith('57')) {
-         // If 10 digits, assume Colombia and add +57
-         // Validating for Colombian numbers (+57 or 10 digits)
+      if (!agent.phoneId) {
+        return res.status(400).json({ message: 'Agent must be deployed before making calls' });
       }
 
-      // Simulate Retell Call Trigger
-      console.log(`Triggering call for agent ${agent.name} to ${phoneNumber}`);
-      const mockRetellId = `call_${Math.random().toString(36).substr(2, 9)}`;
+      // Trigger Retell Call
+      const retellCall = await retell.call.createPhoneCall({
+        from_number: process.env.TWILIO_PHONE_NUMBER || "",
+        to_number: phoneNumber,
+        agent_id: agent.phoneId!,
+      } as any);
 
       const call = await storage.createCall({
         agentId,
         phoneNumber,
         status: 'in-progress',
-        retellCallId: mockRetellId,
+        retellCallId: retellCall.call_id,
         transcript: null,
         recordingUrl: null
       });
 
       res.json({ success: true, callId: call.retellCallId! });
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({
           message: err.errors[0].message,
           field: err.errors[0].path.join('.'),
         });
       }
-      throw err;
+      res.status(500).json({ message: err.message });
     }
+  });
+
+  // WhatsApp Messaging Routes
+  app.post("/api/agents/:id/whatsapp/send", async (req, res) => {
+    try {
+      const agentId = Number(req.params.id);
+      const { phoneNumber, message } = z.object({
+        phoneNumber: z.string(),
+        message: z.string()
+      }).parse(req.body);
+
+      const agent = await storage.getAgent(agentId);
+      if (!agent) return res.status(404).json({ message: "Agent not found" });
+
+      // Logic for sending via Meta WhatsApp API
+      if (process.env.META_PHONE_NUMBER_ID) {
+        // Here we would use the WhatsApp Business API
+        // For now, we log and save to storage
+        console.log(`Sending WhatsApp to ${phoneNumber} from agent ${agent.name}: ${message}`);
+      }
+
+      const msg = await storage.createWhatsAppMessage({
+        agentId,
+        waId: phoneNumber,
+        direction: "outbound",
+        message,
+        status: "sent"
+      });
+
+      res.json(msg);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.get("/api/agents/:id/whatsapp/messages", async (req, res) => {
+    const agentId = Number(req.params.id);
+    const messages = await storage.getWhatsAppMessagesByAgent(agentId);
+    res.json(messages);
   });
 
   return httpServer;
