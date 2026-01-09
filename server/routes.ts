@@ -66,8 +66,11 @@ export async function registerRoutes(
     const agent = await storage.getAgent(Number(req.params.id));
     if (!agent) return res.status(404).json({ message: "Agent not found" });
     
-    // Retell AI deployment using provided Agent ID
-    const retellAgentId = "agent_2def185f1b192cd18262586ad9";
+    // Select Retell Agent ID based on agent name or fallback
+    const retellAgentId = agent.name.includes("Valentina") 
+      ? "agent_785d337996ff481d04460638ea" 
+      : "agent_2def185f1b192cd18262586ad9";
+      
     console.log(`Connecting agent ${agent.name} to Retell ID: ${retellAgentId}`);
     
     await storage.updateAgent(agent.id, { 
@@ -82,7 +85,12 @@ export async function registerRoutes(
     const agent = await storage.getAgent(Number(req.params.id));
     if (!agent) return res.status(404).json({ message: "Agent not found" });
     
-    const retellAgentId = agent.agentId || "agent_2def185f1b192cd18262586ad9";
+    // Fallback to specific IDs if not already set
+    const fallbackId = agent.name.includes("Valentina")
+      ? "agent_785d337996ff481d04460638ea"
+      : "agent_2def185f1b192cd18262586ad9";
+
+    const retellAgentId = agent.agentId || fallbackId;
     
     // Simulate starting a Retell web call with the specific Agent ID
     const mockCallId = `call_${Math.random().toString(36).substr(2, 9)}`;
