@@ -1,30 +1,25 @@
-# Retell AI Voice Agent Dashboard
+# Multi-Agent Voice & WhatsApp System
 
-A professional dashboard to manage, configure, and deploy Retell AI voice agents, with a specific focus on sales teams in Colombia.
+An AI-powered system for business development and sales using Retell AI for real-time voice communication and WhatsApp Business integration.
 
 ## Features
 
-- **Agent Management**: View and edit configurations for voice agents like "Santi" (BDR) and "Valentina" (Technical Sales).
-- **Voice Testing**: Test agents via phone calls with built-in Colombian number validation (+57).
-- **Custom Personas**: Create and configure new voice personas with specific identity prompts and voice settings.
-- **Call History**: Track recent calls and agent interactions.
-- **Modern UI**: Clean dark-mode interface built with Shadcn UI and Framer Motion.
+- **Multi-Agent Architecture**: Support for specialized agents (BDR, Technical Sales, etc.).
+- **Retell AI Integration**: Real-time voice capabilities with low latency and high-quality Spanish voices.
+- **WhatsApp Business**: Integrated messaging for each agent.
+- **Drizzle ORM & PostgreSQL**: Robust data persistence for agents, calls, and message history.
+- **Express.js Backend**: Scalable API for agent management and webhook handling.
+- **React Frontend**: Modern UI for monitoring and managing AI agents.
 
 ## Tech Stack
 
-- **Frontend**: React, Vite, Tailwind CSS, Wouter, TanStack Query, Lucide Icons.
-- **Backend**: Node.js, Express.
-- **Database**: PostgreSQL with Drizzle ORM.
-- **Integrations**: Retell SDK, Twilio (planned/integrated).
+- **Backend**: Node.js, Express.js
+- **Frontend**: React, Vite, Tailwind CSS, Shadcn UI
+- **Database**: PostgreSQL with Drizzle ORM
+- **Voice**: Retell AI
+- **Messaging**: Twilio / WhatsApp Business API
 
 ## Getting Started
-
-### Prerequisites
-
-- Node.js (v20+)
-- PostgreSQL Database
-
-### Installation
 
 1. Install dependencies:
    ```bash
@@ -32,21 +27,19 @@ A professional dashboard to manage, configure, and deploy Retell AI voice agents
    ```
 
 2. Set up environment variables:
-   - `DATABASE_URL`: Your PostgreSQL connection string.
+   - `DATABASE_URL`
+   - `RETELL_API_KEY`
+   - `TWILIO_ACCOUNT_SID`
+   - `TWILIO_AUTH_TOKEN`
 
-3. Push the database schema:
-   ```bash
-   npm run db:push
-   ```
-
-4. Start the development server:
+3. Run the development server:
    ```bash
    npm run dev
    ```
 
-## Development
+## Project Structure
 
-- `shared/schema.ts`: Database models and Zod schemas.
-- `shared/routes.ts`: API contract definitions.
-- `server/routes.ts`: API route implementations.
-- `client/src/pages/`: Frontend application pages.
+- `server/`: Express backend and API routes.
+- `client/`: React frontend application.
+- `shared/`: Shared types and database schema.
+- `attached_assets/`: Static assets and generated content.
