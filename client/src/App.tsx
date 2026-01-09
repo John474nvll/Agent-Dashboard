@@ -8,6 +8,7 @@ import Dashboard from "@/pages/Dashboard";
 import AgentsList from "@/pages/AgentsList";
 import AgentDetail from "@/pages/AgentDetail";
 import Settings from "@/pages/Settings";
+import Deployments from "@/pages/Deployments";
 
 function Router() {
   return (
@@ -16,7 +17,7 @@ function Router() {
       <Route path="/agents" component={AgentsList} />
       <Route path="/agents/:id" component={AgentDetail} />
       <Route path="/settings" component={Settings} />
-      {/* Deployments placeholders redirect to 404 for now or could be implemented later */}
+      <Route path="/deployments" component={Deployments} />
       <Route component={NotFound} />
     </Switch>
   );
