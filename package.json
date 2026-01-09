@@ -13,6 +13,7 @@
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",
+    "@prisma/client": "^7.2.0",
     "@prisma/engines-version": "^7.3.0-9.56fb1a46fc63fdc0278ba81dfff55565eb4ba165",
     "@prisma/instrumentation": "^7.2.0",
     "@prisma/studio-core": "^0.12.0",
