@@ -234,5 +234,40 @@ export async function registerRoutes(
     res.json({ success: true, message: `Agent ${agent.name} deployed successfully!` });
   });
 
+  app.post(api.agents.makeCall.path, async (req, res) => {
+    try {
+      const { phoneNumber } = api.agents.makeCall.input.parse(req.body);
+      const agentId = Number(req.params.id);
+      const agent = await storage.getAgent(agentId);
+      
+      if (!agent) {
+        return res.status(404).json({ message: 'Agent not found' });
+      }
+
+      // Simulate Retell Call Trigger
+      console.log(`Triggering call for agent ${agent.name} to ${phoneNumber}`);
+      const mockRetellId = `call_${Math.random().toString(36).substr(2, 9)}`;
+
+      const call = await storage.createCall({
+        agentId,
+        phoneNumber,
+        status: 'in-progress',
+        retellCallId: mockRetellId,
+        transcript: null,
+        recordingUrl: null
+      });
+
+      res.json({ success: true, callId: call.retellCallId! });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
+  });
+
   return httpServer;
 }

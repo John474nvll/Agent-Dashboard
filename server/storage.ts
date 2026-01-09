@@ -1,6 +1,6 @@
 
 import { db } from "./db";
-import { agents, type Agent, type InsertAgent } from "@shared/schema";
+import { agents, calls, type Agent, type InsertAgent, type Call, type InsertCall } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 export interface IStorage {
@@ -9,6 +9,8 @@ export interface IStorage {
   createAgent(agent: InsertAgent): Promise<Agent>;
   updateAgent(id: number, agent: Partial<InsertAgent>): Promise<Agent>;
   deleteAgent(id: number): Promise<void>;
+  createCall(call: InsertCall): Promise<Call>;
+  getCallsByAgent(agentId: number): Promise<Call[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -37,6 +39,15 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAgent(id: number): Promise<void> {
     await db.delete(agents).where(eq(agents.id, id));
+  }
+
+  async createCall(insertCall: InsertCall): Promise<Call> {
+    const [call] = await db.insert(calls).values(insertCall).returning();
+    return call;
+  }
+
+  async getCallsByAgent(agentId: number): Promise<Call[]> {
+    return await db.select().from(calls).where(eq(calls.agentId, agentId));
   }
 }
 

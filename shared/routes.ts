@@ -66,6 +66,18 @@ export const api = {
         200: z.object({ success: z.boolean(), message: z.string() }),
         404: errorSchemas.notFound,
       },
+    },
+    makeCall: {
+      method: 'POST' as const,
+      path: '/api/agents/:id/call',
+      input: z.object({
+        phoneNumber: z.string(),
+      }),
+      responses: {
+        200: z.object({ success: z.boolean(), callId: z.string() }),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+      },
     }
   },
 };
