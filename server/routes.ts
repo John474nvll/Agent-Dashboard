@@ -66,31 +66,29 @@ export async function registerRoutes(
     const agent = await storage.getAgent(Number(req.params.id));
     if (!agent) return res.status(404).json({ message: "Agent not found" });
     
-    // Simulate Retell AI deployment
-    console.log(`Deploying agent ${agent.name} to Retell AI...`);
-    const mockRetellId = `retell_${Math.random().toString(36).substr(2, 9)}`;
+    // Retell AI deployment using provided Agent ID
+    const retellAgentId = "agent_2def185f1b192cd18262586ad9";
+    console.log(`Connecting agent ${agent.name} to Retell ID: ${retellAgentId}`);
     
     await storage.updateAgent(agent.id, { 
-      agentId: mockRetellId,
+      agentId: retellAgentId,
       isDeployed: "true"
     });
     
-    res.json({ success: true, agentId: mockRetellId });
+    res.json({ success: true, agentId: retellAgentId });
   });
 
   app.post(api.agents.testCall.path, async (req, res) => {
     const agent = await storage.getAgent(Number(req.params.id));
     if (!agent) return res.status(404).json({ message: "Agent not found" });
     
-    if (agent.isDeployed !== "true") {
-      return res.status(400).json({ message: "Agent must be deployed before testing" });
-    }
-
-    // Simulate starting a Retell web call
+    const retellAgentId = agent.agentId || "agent_2def185f1b192cd18262586ad9";
+    
+    // Simulate starting a Retell web call with the specific Agent ID
     const mockCallId = `call_${Math.random().toString(36).substr(2, 9)}`;
     res.json({ 
       callId: mockCallId, 
-      webUrl: `https://retellai.com/widget/${agent.agentId}` 
+      webUrl: `https://retellai.com/widget/${retellAgentId}` 
     });
   });
 
