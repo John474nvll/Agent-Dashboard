@@ -455,3 +455,6 @@ export async function registerRoutes(
       res.status(500).json({ message: err.message });
     }
   });
+
+  return httpServer;
+}
