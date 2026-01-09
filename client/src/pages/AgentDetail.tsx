@@ -35,6 +35,7 @@ const formSchema = z.object({
   llmId: z.string().optional(),
   generalPrompt: z.string().min(10, "El prompt debe tener al menos 10 caracteres"),
   isActive: z.boolean(),
+  phoneNumber: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -69,6 +70,7 @@ export default function AgentDetail() {
       llmId: "",
       generalPrompt: "",
       isActive: false,
+      phoneNumber: "",
     },
   });
 
@@ -82,6 +84,7 @@ export default function AgentDetail() {
         llmId: config.llm_id || "",
         generalPrompt: config.general_prompt || config.retellLlmData?.general_prompt || "",
         isActive: agent.isActive || false,
+        phoneNumber: agent.phoneNumber || "",
       });
     }
   }, [agent, form]);
@@ -99,6 +102,7 @@ export default function AgentDetail() {
       name: data.name,
       description: data.description,
       isActive: data.isActive,
+      phoneNumber: data.phoneNumber,
       config: updatedConfig,
     });
   };
