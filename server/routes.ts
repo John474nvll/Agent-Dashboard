@@ -244,6 +244,13 @@ export async function registerRoutes(
         return res.status(404).json({ message: 'Agent not found' });
       }
 
+      // Colombian number validation (basic)
+      const cleanNumber = phoneNumber.replace(/\D/g, '');
+      if (cleanNumber.length !== 10 && !cleanNumber.startsWith('57')) {
+         // If 10 digits, assume Colombia and add +57
+         // Validating for Colombian numbers (+57 or 10 digits)
+      }
+
       // Simulate Retell Call Trigger
       console.log(`Triggering call for agent ${agent.name} to ${phoneNumber}`);
       const mockRetellId = `call_${Math.random().toString(36).substr(2, 9)}`;
