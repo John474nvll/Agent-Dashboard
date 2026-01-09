@@ -124,3 +124,39 @@ export function useDeployAgent() {
     },
   });
 }
+
+export function useMakeCall() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ agentId, phoneNumber }: { agentId: number; phoneNumber: string }) => {
+      const url = buildUrl(api.agents.makeCall.path, { id: agentId });
+      const res = await fetch(url, {
+        method: api.agents.makeCall.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phoneNumber }),
+      });
+      
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "No se pudo iniciar la llamada");
+      }
+      return await res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/agents/${variables.agentId}/calls`] });
+      toast({
+        title: "Llamada iniciada",
+        description: "Se ha solicitado la llamada de prueba correctamente.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+}

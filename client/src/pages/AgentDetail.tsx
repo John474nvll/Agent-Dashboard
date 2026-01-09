@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
-import { useAgent, useUpdateAgent, useDeleteAgent } from "@/hooks/use-agents";
+import { useAgent, useUpdateAgent, useDeleteAgent, useMakeCall } from "@/hooks/use-agents";
 import { useRoute, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,11 +11,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, Trash2, Bot, Mic2, FileCode, History, Phone, Clock } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Bot, Mic2, FileCode, History, Phone, Clock, Play } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
-import { api, buildUrl } from "@shared/routes";
+import { api } from "@shared/routes";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,6 +49,19 @@ export default function AgentDetail() {
   const { data: agent, isLoading } = useAgent(id);
   const updateAgent = useUpdateAgent();
   const deleteAgent = useDeleteAgent();
+  const makeCall = useMakeCall();
+  const [testPhoneNumber, setTestPhoneNumber] = useState("");
+
+  const handleTestCall = () => {
+    if (!testPhoneNumber) return;
+    makeCall.mutate({ agentId: id, phoneNumber: testPhoneNumber });
+  };
+
+  // Fetch calls for this agent
+  const { data: calls } = useQuery({
+    queryKey: [`/api/agents/${id}/calls`],
+    enabled: !!id,
+  });
 
   // Fetch calls for this agent
   const { data: calls } = useQuery({
@@ -349,6 +362,32 @@ export default function AgentDetail() {
               </div>
 
               <div className="space-y-6">
+                <Card className="glass-card border-border/50">
+                  <CardHeader>
+                    <CardTitle>Prueba de Voz</CardTitle>
+                    <CardDescription>Realiza una llamada de prueba para escuchar al agente.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <FormLabel>Número de Teléfono</FormLabel>
+                      <Input 
+                        placeholder="+57..." 
+                        value={testPhoneNumber}
+                        onChange={(e) => setTestPhoneNumber(e.target.value)}
+                        className="bg-background/50 border-border/50" 
+                      />
+                    </div>
+                    <Button 
+                      className="w-full gap-2" 
+                      onClick={handleTestCall}
+                      disabled={makeCall.isPending || !testPhoneNumber}
+                    >
+                      <Play className="h-4 w-4" />
+                      {makeCall.isPending ? "Iniciando..." : "Llamar ahora"}
+                    </Button>
+                  </CardContent>
+                </Card>
+
                 <Card className="glass-card border-border/50">
                   <CardHeader>
                     <CardTitle>Estado</CardTitle>
