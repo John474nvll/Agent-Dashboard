@@ -1,16 +1,120 @@
 import type { Express } from "express";
-import { createServer, type Server } from "http";
+import type { Server } from "http";
 import { storage } from "./storage";
+import { api } from "@shared/routes";
+import { z } from "zod";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
+  // Agents API
+  app.get(api.agents.list.path, async (req, res) => {
+    const agents = await storage.getAgents();
+    res.json(agents);
+  });
 
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
+  app.get(api.agents.get.path, async (req, res) => {
+    const agent = await storage.getAgent(Number(req.params.id));
+    if (!agent) {
+      return res.status(404).json({ message: 'Agent not found' });
+    }
+    res.json(agent);
+  });
+
+  app.post(api.agents.create.path, async (req, res) => {
+    try {
+      const input = api.agents.create.input.parse(req.body);
+      const agent = await storage.createAgent(input);
+      res.status(201).json(agent);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
+  });
+
+  app.put(api.agents.update.path, async (req, res) => {
+    try {
+      const input = api.agents.update.input.parse(req.body);
+      const agent = await storage.updateAgent(Number(req.params.id), input);
+      if (!agent) {
+        return res.status(404).json({ message: 'Agent not found' });
+      }
+      res.json(agent);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
+  });
+
+  app.delete(api.agents.delete.path, async (req, res) => {
+    await storage.deleteAgent(Number(req.params.id));
+    res.status(204).send();
+  });
+
+  // Seed Data
+  await seedDatabase();
 
   return httpServer;
+}
+
+async function seedDatabase() {
+  const existingAgents = await storage.getAgents();
+  if (existingAgents.length === 0) {
+    const agent1 = {
+      agent_id: "",
+      channel: "voice",
+      last_modification_timestamp: 1767920240240,
+      agent_name: "Santi - Sales Rep",
+      version_description: "Identity: Santi, SoftGAN BDR.",
+      response_engine: { type: "retell-llm", llm_id: "llm_2988aa7985cf70c3bc55b75e0f88", version: 1 },
+      language: "es-ES",
+      voice_id: "11labs-Bing",
+      retellLlmData: {
+        model: "gpt-4.1",
+        general_prompt: "You are Santi, an elite Business Development Representative..."
+      }
+    };
+
+    const agent2 = {
+      agent_id: "",
+      channel: "voice",
+      last_modification_timestamp: 1767921557549,
+      agent_name: "Valentina - Tech Sales",
+      version_description: "Identity: Valentina, Softgan Electronics.",
+      response_engine: { type: "retell-llm", llm_id: "llm_c6176d2fbb7dfe262258f0d6c423", version: 3 },
+      language: "es-ES",
+      voice_id: "11labs-Susan",
+      retellLlmData: {
+        model: "gpt-4.1",
+        general_prompt: "You are Valentina, the Senior Technical Sales Executive..."
+      }
+    };
+
+    await storage.createAgent({
+      name: "Santi - Sales Rep",
+      voiceId: "11labs-Bing",
+      language: "es-ES",
+      config: agent1,
+    });
+
+    await storage.createAgent({
+      name: "Valentina - Tech Sales",
+      voiceId: "11labs-Susan",
+      language: "es-ES",
+      config: agent2,
+    });
+    
+    console.log("Database seeded with initial agents");
+  }
 }
