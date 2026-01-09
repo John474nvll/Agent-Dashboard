@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, Activity, Settings, Mic2 } from "lucide-react";
+import { LayoutDashboard, Users, Activity, Settings, Mic2, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Sidebar() {
@@ -8,6 +8,7 @@ export function Sidebar() {
   const links = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/agents", label: "Agents", icon: Users },
+    { href: "/whatsapp", label: "WhatsApp", icon: MessageSquare },
     { href: "/deployments", label: "Deployments", icon: Activity },
     { href: "/settings", label: "Settings", icon: Settings },
   ];
