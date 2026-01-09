@@ -62,7 +62,7 @@ export default function Statistics() {
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
           
           <Card className="glass-card border-border/50 p-6">
             <div className="flex items-center gap-4">
